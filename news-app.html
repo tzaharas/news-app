@@ -577,7 +577,7 @@ document.getElementById('dateline').innerHTML =
   '<br>Global Edition';
 
 // ---- CONFIG ----
-const API_KEY = '552a6cf9dd87e1c04fa4dff44fd4faa3';
+const API_KEY = 'Abd8B6Cddf-WDW0EdyQcqKOHLhkKwc8nGbEk_Aj2bF3eo2n5';
 
 // Keywords to filter out
 const BLOCKED_KEYWORDS = [
@@ -587,20 +587,14 @@ const BLOCKED_KEYWORDS = [
   'us politics', 'american politics', 'midterm', 'oval office'
 ];
 
-const CATEGORY_QUERIES = {
-  'All': 'world',
-  'World': 'international',
-  'Science': 'science discovery',
-  'Technology': 'technology innovation',
-  'Environment': 'climate environment',
-  'Health': 'health medicine',
-  'Culture': 'arts culture'
-};
-
-const CATEGORY_EMOJIS = {
-  'science': '🔭', 'technology': '💻', 'health': '💊',
-  'environment': '🌿', 'world': '🌍', 'culture': '🎨',
-  'business': '📈', 'sports': '⚽', 'general': '📰'
+const CATEGORY_MAP = {
+  'All': '',
+  'World': 'world',
+  'Science': 'science',
+  'Technology': 'technology',
+  'Environment': 'environment',
+  'Health': 'health',
+  'Culture': 'entertainment'
 };
 
 // ---- DATA ----
@@ -636,28 +630,31 @@ function guessEmoji(title, description) {
 }
 
 async function fetchNews(category) {
-  const query = CATEGORY_QUERIES[category] || 'world';
-  const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=10&sortby=publishedAt&apikey=${API_KEY}`;
+  const cat = CATEGORY_MAP[category] || '';
+  const url = cat
+    ? `https://api.currentsapi.services/v1/latest-news?category=${cat}&language=en&apiKey=${API_KEY}`
+    : `https://api.currentsapi.services/v1/latest-news?language=en&apiKey=${API_KEY}`;
 
   const res = await fetch(url);
   if (!res.ok) throw new Error(`API error ${res.status}`);
   const data = await res.json();
 
-  if (!data.articles) throw new Error(data.errors?.[0] || 'API error');
+  if (data.status !== 'ok') throw new Error(data.message || 'API error');
 
-  return data.articles
+  return data.news
     .filter(a => a.title)
     .filter(a => !isBlocked(a.title) && !isBlocked(a.description))
+    .slice(0, 10)
     .map(a => ({
       id: ++storyIdCounter,
       category: category === 'All' ? 'World' : category,
       headline: a.title,
       summary: a.description || 'Read the full story for more details.',
-      body: (a.content || a.description || '').trim(),
-      source: a.source.name,
-      time: timeAgo(a.publishedAt),
+      body: (a.description || '').trim(),
+      source: a.author || 'Unknown',
+      time: timeAgo(a.published),
       emoji: guessEmoji(a.title, a.description),
-      image: a.image,
+      image: a.image !== 'None' ? a.image : null,
       url: a.url
     }));
 }
