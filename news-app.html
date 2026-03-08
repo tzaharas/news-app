@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Brief</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink: #0f0e0c; --paper: #f5f0e8; --cream: #ede8de;
+    --accent: #c8392b; --muted: #7a7570; --rule: #d4cfc6;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; overflow-x: hidden; }
+
+  .masthead { border-bottom: 3px double var(--ink); padding: 0 2rem; background: var(--paper); position: sticky; top: 0; z-index: 100; }
+  .masthead-top { display: flex; align-items: baseline; justify-content: space-between; padding: 1rem 0 0.5rem; border-bottom: 1px solid var(--rule); gap: 1rem; }
+  .logo { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900; letter-spacing: -0.02em; line-height: 1; color: var(--ink); }
+  .logo span { color: var(--accent); }
+  .dateline { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); text-align: right; line-height: 1.5; text-transform: uppercase; letter-spacing: 0.05em; }
+  .masthead-tagline { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.78rem; color: var(--muted); text-align: center; padding: 0.35rem 0; letter-spacing: 0.03em; }
+  .filters { display: flex; gap: 0.5rem; padding: 0.6rem 0; overflow-x: auto; scrollbar-width: none; align-items: center; }
+  .filters::-webkit-scrollbar { display: none; }
+  .filter-btn { font-family: 'DM Mono', monospace; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.3rem 0.75rem; border: 1px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer; white-space: nowrap; transition: all 0.15s ease; }
+  .filter-btn:hover, .filter-btn.active { background: var(--ink); color: var(--paper); }
+
+  .page { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  .hero-card { border: 1px solid var(--ink); margin-bottom: 2rem; background: var(--ink); color: var(--paper); padding: 2.5rem 2.5rem 2rem; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; animation: fadeUp 0.4s ease both; }
+  .hero-card:hover { transform: translateY(-3px); box-shadow: 6px 6px 0 var(--accent); }
+  .hero-tag { display: inline-block; font-family: 'DM Mono', monospace; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.12em; background: var(--accent); color: white; padding: 0.2rem 0.5rem; margin-bottom: 1rem; }
+  .hero-headline { font-family: 'Playfair Display', serif; font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 700; line-height: 1.2; margin-bottom: 1rem; }
+  .hero-summary { font-size: 0.88rem; line-height: 1.7; color: #b8b3aa; margin-bottom: 1.5rem; max-width: 800px; }
+  .hero-meta { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: #7a7570; text-transform: uppercase; letter-spacing: 0.06em; border-top: 1px solid #2d2b28; padding-top: 0.75rem; display: flex; justify-content: space-between; }
+
+  .section-rule { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+  .section-rule-label { font-family: 'DM Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap; color: var(--muted); }
+  .section-rule-line { flex: 1; height: 1px; background: var(--rule); }
+
+  .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin-bottom: 2rem; }
+
+  .news-card { background: var(--paper); cursor: pointer; transition: background 0.15s ease; display: flex; flex-direction: column; animation: fadeUp 0.4s ease both; }
+  .news-card:hover { background: var(--cream); }
+  .news-card:hover .card-headline { color: var(--accent); }
+  .card-body { padding: 1.4rem 1.25rem 1rem; display: flex; flex-direction: column; gap: 0.6rem; flex: 1; }
+  .card-tag { font-family: 'DM Mono', monospace; font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 500; }
+  .card-headline { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; line-height: 1.35; transition: color 0.15s ease; }
+  .card-summary { font-size: 0.8rem; line-height: 1.6; color: var(--muted); flex-grow: 1; }
+  .card-meta { font-family: 'DM Mono', monospace; font-size: 0.58rem; color: #aaa49c; text-transform: uppercase; letter-spacing: 0.05em; border-top: 1px solid var(--rule); padding-top: 0.6rem; display: flex; justify-content: space-between; margin-top: auto; }
+
+  .load-more { display: block; width: 100%; text-align: center; font-family: 'DM Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink); border: 1px solid var(--ink); padding: 0.85rem 2rem; background: transparent; cursor: pointer; transition: all 0.15s ease; }
+  .load-more:hover { background: var(--ink); color: var(--paper); }
+  .load-more:disabled { opacity: 0.4; cursor: default; }
+
+  .loading { text-align: center; padding: 4rem 2rem; font-family: 'Playfair Display', serif; font-style: italic; color: var(--muted); font-size: 1.1rem; }
+  .loading::after { content: ''; display: inline-block; width: 1ch; animation: dots 1.2s steps(3, end) infinite; }
+  @keyframes dots { 0%, 33% { content: '.'; } 34%, 66% { content: '..'; } 67%, 100% { content: '...'; } }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(15,14,12,0.85); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; backdrop-filter: blur(2px); }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: var(--paper); max-width: 680px; width: 100%; max-height: 85vh; overflow-y: auto; border: 1px solid var(--ink); transform: translateY(20px); transition: transform 0.2s ease; }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-header { padding: 1.5rem 1.5rem 1rem; border-bottom: 1px solid var(--rule); position: sticky; top: 0; background: var(--paper); display: flex; justify-content: space-between; align-items: start; gap: 1rem; }
+  .modal-tag { font-family: 'DM Mono', monospace; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 0.5rem; }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; line-height: 1.3; flex: 1; }
+  .modal-close { background: none; border: 1px solid var(--rule); width: 2rem; height: 2rem; cursor: pointer; font-size: 1rem; color: var(--muted); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .modal-close:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .modal-body { padding: 1.5rem; }
+  .modal-meta { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1rem; }
+  .modal-content { font-size: 0.9rem; line-height: 1.75; color: #3a3733; }
+  .modal-content p { margin-bottom: 1rem; }
+  .modal-source-link { display: inline-block; margin-top: 1rem; font-family: 'DM Mono', monospace; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent); padding-bottom: 1px; transition: opacity 0.15s; }
+  .modal-source-link:hover { opacity: 0.7; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 700px) {
+    .cards-grid { grid-template-columns: 1fr; }
+    .masthead { padding: 0 1rem; }
+    .page { padding: 1.25rem 1rem 3rem; }
+    .hero-card { padding: 1.5rem 1.5rem 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-top">
+    <div class="logo">The<span>.</span>Brief</div>
+    <div class="dateline" id="dateline"></div>
+  </div>
+  <div class="masthead-tagline">Global headlines, without the noise</div>
+  <div class="filters" id="filters"></div>
+</header>
+
+<main class="page">
+  <div id="app-content"><div class="loading">Gathering the news</div></div>
+</main>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="flex:1">
+        <div class="modal-tag" id="modal-tag"></div>
+        <div class="modal-title" id="modal-title"></div>
+      </div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-meta" id="modal-meta"></div>
+      <div class="modal-content" id="modal-content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---- DATE ----
+const now = new Date();
+document.getElementById('dateline').innerHTML =
+  now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) +
+  '<br>Global Edition';
+
+// ---- CATEGORIES ----
+const CATEGORIES = [
+  { label: 'World',    query: 'world news -politics -trump' },
+  { label: 'Art',      query: 'art' },
+  { label: 'Culture',  query: 'culture' },
+  { label: 'Japan',    query: 'Japan' },
+  { label: 'Science',  query: 'science' },
+  { label: 'MotoGP',   query: 'MotoGP' },
+  { label: 'F1',       query: 'Formula 1' },
+];
+
+const BLOCKED = [
+  'trump','donald trump','maga','republican party','democratic party',
+  'congress','senate','house of representatives','white house',
+  'biden','harris','pelosi','mcconnell','gop','us politics','midterm','oval office'
+];
+
+// ---- STATE ----
+let activeCategory = CATEGORIES[0];
+let allStories = [];
+let visibleCount = 25;
+let storyId = 0;
+
+// ---- HELPERS ----
+function isBlocked(text) {
+  if (!text) return false;
+  const l = text.toLowerCase();
+  return BLOCKED.some(k => l.includes(k));
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 60000);
+  if (isNaN(diff)) return '';
+  if (diff < 60) return `${diff}m ago`;
+  if (diff < 1440) return `${Math.floor(diff/60)}h ago`;
+  return `${Math.floor(diff/1440)}d ago`;
+}
+
+function stripHtml(html) {
+  if (!html) return '';
+  return html.replace(/<[^>]*>/g, '')
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+    .replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&nbsp;/g,' ').trim();
+}
+
+// ---- FETCH via allorigins proxy ----
+async function fetchRSS(query) {
+  const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
+
+  const res = await fetch(proxyUrl);
+  if (!res.ok) throw new Error(`Network error ${res.status}`);
+  const data = await res.json();
+
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(data.contents, 'text/xml');
+  const items = Array.from(xml.querySelectorAll('item'));
+
+  return items
+    .map(item => {
+      const title = stripHtml(item.querySelector('title')?.textContent || '');
+      const description = stripHtml(item.querySelector('description')?.textContent || '');
+      const pubDate = item.querySelector('pubDate')?.textContent || '';
+      const link = item.querySelector('link')?.textContent || '';
+      const source = stripHtml(item.querySelector('source')?.textContent || '');
+      return { title, description, pubDate, link, source };
+    })
+    .filter(a => a.title && !isBlocked(a.title) && !isBlocked(a.description));
+}
+
+// ---- FILTERS ----
+function renderFilters() {
+  document.getElementById('filters').innerHTML = CATEGORIES.map(cat => `
+    <button class="filter-btn ${cat.label === activeCategory.label ? 'active' : ''}"
+      onclick="switchCategory('${cat.label}')">${cat.label}</button>
+  `).join('');
+}
+
+// ---- SWITCH CATEGORY ----
+async function switchCategory(label) {
+  activeCategory = CATEGORIES.find(c => c.label === label);
+  visibleCount = 25;
+  allStories = [];
+  renderFilters();
+  await loadAndRender();
+}
+
+// ---- LOAD ----
+async function loadAndRender() {
+  const container = document.getElementById('app-content');
+  container.innerHTML = `<div class="loading">Gathering the news</div>`;
+  try {
+    const items = await fetchRSS(activeCategory.query);
+    allStories = items.map(a => ({
+      id: ++storyId,
+      category: activeCategory.label,
+      headline: a.title,
+      summary: a.description || '',
+      source: a.source,
+      time: timeAgo(a.pubDate),
+      url: a.link
+    }));
+    renderStories();
+  } catch(err) {
+    container.innerHTML = `<div class="loading" style="animation:none">
+      Could not load stories. Please check your connection.<br>
+      <small style="font-family:monospace;font-size:0.7rem;color:#aaa">${err.message}</small>
+    </div>`;
+  }
+}
+
+// ---- RENDER ----
+function renderStories() {
+  const container = document.getElementById('app-content');
+  const visible = allStories.slice(0, visibleCount);
+
+  if (!visible.length) {
+    container.innerHTML = `<div class="loading" style="animation:none">No stories found.</div>`;
+    return;
+  }
+
+  const [hero, ...rest] = visible;
+
+  const heroHTML = `
+    <div class="hero-card" onclick="openModal(${hero.id})">
+      <div class="hero-tag">${hero.category}</div>
+      <div class="hero-headline">${hero.headline}</div>
+      ${hero.summary ? `<div class="hero-summary">${hero.summary}</div>` : ''}
+      <div class="hero-meta"><span>${hero.source}</span><span>${hero.time}</span></div>
+    </div>`;
+
+  const gridHTML = rest.length ? `
+    <div class="section-rule">
+      <span class="section-rule-label">More Stories</span>
+      <div class="section-rule-line"></div>
+    </div>
+    <div class="cards-grid">
+      ${rest.map(s => `
+        <div class="news-card" onclick="openModal(${s.id})">
+          <div class="card-body">
+            <div class="card-tag">${s.category}</div>
+            <div class="card-headline">${s.headline}</div>
+            ${s.summary ? `<div class="card-summary">${s.summary}</div>` : ''}
+            <div class="card-meta"><span>${s.source}</span><span>${s.time}</span></div>
+          </div>
+        </div>`).join('')}
+    </div>` : '';
+
+  const hasMore = allStories.length > visibleCount;
+  const loadMoreHTML = `
+    <button class="load-more" id="load-more-btn" onclick="loadMore()" ${!hasMore ? 'disabled' : ''}>
+      ${hasMore ? 'Load 10 More Stories' : 'No More Stories'}
+    </button>`;
+
+  container.innerHTML = heroHTML + gridHTML + loadMoreHTML;
+}
+
+// ---- LOAD MORE ----
+function loadMore() {
+  visibleCount += 10;
+  renderStories();
+}
+
+// ---- MODAL ----
+function openModal(id) {
+  const s = allStories.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('modal-tag').textContent = s.category;
+  document.getElementById('modal-title').textContent = s.headline;
+  document.getElementById('modal-meta').textContent = `${s.source}  ·  ${s.time}`;
+  document.getElementById('modal-content').innerHTML =
+    `${s.summary ? `<p>${s.summary}</p>` : ''}
+     <a class="modal-source-link" href="${s.url}" target="_blank" rel="noopener">Read full story ↗</a>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModalDirect(); });
+
+// ---- INIT ----
+renderFilters();
+loadAndRender();
+</script>
+</body>
+</html>
